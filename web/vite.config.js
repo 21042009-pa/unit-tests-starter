@@ -6,8 +6,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    // O front chama /api/produtos e o Vite repassa para http://localhost:3000/produtos.
-    // Assim front e API ficam na mesma origem e a API nao precisa de CORS.
+    // O front chama /api/produtos e o Vite repassa para http://localhost:3000/produtos
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

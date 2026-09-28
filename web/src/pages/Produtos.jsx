@@ -1,102 +1,60 @@
 import { useEffect, useState } from 'react';
-import { criarProduto, formatarMoeda, listarProdutos, removerProduto } from '../api.js';
+import { api, moeda } from '../api.js';
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState('');
   const [nome, setNome] = useState('');
   const [preco, setPreco] = useState('');
+  const [erro, setErro] = useState('');
 
-  async function carregar() {
-    try {
-      setProdutos(await listarProdutos());
-    } catch (e) {
-      setErro(e.message);
-    } finally {
-      setCarregando(false);
-    }
-  }
+  const carregar = () => api('/produtos').then(setProdutos);
 
   useEffect(() => {
     carregar();
   }, []);
 
-  async function cadastrar(evento) {
-    evento.preventDefault();
+  async function cadastrar(e) {
+    e.preventDefault();
     try {
-      await criarProduto({ nome, preco: Number(preco) });
-      setErro('');
+      await api('/produtos', 'POST', { nome, preco: Number(preco) });
       setNome('');
       setPreco('');
-      await carregar();
-    } catch (e) {
-      setErro(e.message);
+      setErro('');
+      carregar();
+    } catch (err) {
+      setErro(err.message);
     }
   }
 
-  async function excluir(id) {
-    try {
-      await removerProduto(id);
-      setErro('');
-      await carregar();
-    } catch (e) {
-      setErro(e.message);
-    }
+  async function remover(id) {
+    await api(`/produtos/${id}`, 'DELETE');
+    carregar();
   }
 
   return (
     <section>
-      <h1>Produtos</h1>
-
-      {erro && <p role="alert" className="erro">{erro}</p>}
-
-      <form onSubmit={cadastrar} className="formulario">
-        <div className="campo">
-          <label htmlFor="produto-nome">Nome</label>
-          <input id="produto-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-        </div>
-        <div className="campo">
-          <label htmlFor="produto-preco">Preço</label>
-          <input
-            id="produto-preco"
-            type="number"
-            step="0.01"
-            value={preco}
-            onChange={(e) => setPreco(e.target.value)}
-          />
-        </div>
-        <button type="submit">Cadastrar produto</button>
+      <h2>Produtos</h2>
+      <form onSubmit={cadastrar}>
+        <input aria-label="Nome" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <input aria-label="Preco" placeholder="Preco" type="number" step="0.01" value={preco} onChange={(e) => setPreco(e.target.value)} />
+        <button type="submit">Cadastrar</button>
       </form>
+      {erro && <p className="erro">{erro}</p>}
 
-      {carregando ? (
-        <p>Carregando...</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>Preço</th>
-              <th>Ações</th>
+      <table>
+        <thead>
+          <tr><th>Nome</th><th>Preco</th><th></th></tr>
+        </thead>
+        <tbody>
+          {produtos.map((p) => (
+            <tr key={p.id}>
+              <td>{p.nome}</td>
+              <td>{moeda(p.preco)}</td>
+              <td><button onClick={() => remover(p.id)}>Remover</button></td>
             </tr>
-          </thead>
-          <tbody>
-            {produtos.map((produto) => (
-              <tr key={produto.id}>
-                <td>{produto.id}</td>
-                <td>{produto.nome}</td>
-                <td>{formatarMoeda(produto.preco)}</td>
-                <td>
-                  <button className="perigo" onClick={() => excluir(produto.id)}>
-                    Excluir
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
     </section>
   );
 }

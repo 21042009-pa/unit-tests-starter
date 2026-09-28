@@ -1,126 +1,80 @@
 import { useEffect, useState } from 'react';
-import { atualizarCliente, criarCliente, listarClientes, removerCliente } from '../api.js';
+import { api } from '../api.js';
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState('');
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
-  // null = cadastrando um novo cliente; numero = id do cliente em edicao
   const [editandoId, setEditandoId] = useState(null);
+  const [erro, setErro] = useState('');
 
-  async function carregar() {
-    try {
-      setClientes(await listarClientes());
-    } catch (e) {
-      setErro(e.message);
-    } finally {
-      setCarregando(false);
-    }
-  }
+  const carregar = () => api('/clientes').then(setClientes);
 
   useEffect(() => {
     carregar();
   }, []);
 
-  function limparFormulario() {
+  function limpar() {
     setNome('');
     setEmail('');
     setEditandoId(null);
+    setErro('');
   }
 
-  async function salvar(evento) {
-    evento.preventDefault();
+  async function salvar(e) {
+    e.preventDefault();
     try {
-      if (editandoId === null) {
-        await criarCliente({ nome, email });
+      if (editandoId) {
+        await api(`/clientes/${editandoId}`, 'PUT', { nome, email });
       } else {
-        await atualizarCliente(editandoId, { nome, email });
+        await api('/clientes', 'POST', { nome, email });
       }
-      setErro('');
-      limparFormulario();
-      await carregar();
-    } catch (e) {
-      setErro(e.message);
+      limpar();
+      carregar();
+    } catch (err) {
+      setErro(err.message);
     }
   }
 
   function editar(cliente) {
-    setEditandoId(cliente.id);
     setNome(cliente.nome);
     setEmail(cliente.email);
+    setEditandoId(cliente.id);
   }
 
-  async function excluir(id) {
-    try {
-      await removerCliente(id);
-      setErro('');
-      if (id === editandoId) limparFormulario();
-      await carregar();
-    } catch (e) {
-      setErro(e.message);
-    }
+  async function remover(id) {
+    await api(`/clientes/${id}`, 'DELETE');
+    carregar();
   }
 
   return (
     <section>
-      <h1>Clientes</h1>
-
-      {erro && <p role="alert" className="erro">{erro}</p>}
-
-      <form onSubmit={salvar} className="formulario">
-        <div className="campo">
-          <label htmlFor="cliente-nome">Nome</label>
-          <input id="cliente-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-        </div>
-        <div className="campo">
-          <label htmlFor="cliente-email">E-mail</label>
-          <input id="cliente-email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        {editandoId === null ? (
-          <button type="submit">Cadastrar cliente</button>
-        ) : (
-          <>
-            <button type="submit">Salvar alterações</button>
-            <button type="button" className="secundario" onClick={limparFormulario}>
-              Cancelar edição
-            </button>
-          </>
-        )}
+      <h2>Clientes</h2>
+      <form onSubmit={salvar}>
+        <input aria-label="Nome" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <input aria-label="Email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <button type="submit">{editandoId ? 'Salvar' : 'Cadastrar'}</button>
+        {editandoId && <button type="button" onClick={limpar}>Cancelar</button>}
       </form>
+      {erro && <p className="erro">{erro}</p>}
 
-      {carregando ? (
-        <p>Carregando...</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Ações</th>
+      <table>
+        <thead>
+          <tr><th>Nome</th><th>Email</th><th></th></tr>
+        </thead>
+        <tbody>
+          {clientes.map((c) => (
+            <tr key={c.id}>
+              <td>{c.nome}</td>
+              <td>{c.email}</td>
+              <td>
+                <button onClick={() => editar(c)}>Editar</button>{' '}
+                <button onClick={() => remover(c.id)}>Remover</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {clientes.map((cliente) => (
-              <tr key={cliente.id}>
-                <td>{cliente.id}</td>
-                <td>{cliente.nome}</td>
-                <td>{cliente.email}</td>
-                <td className="acoes">
-                  <button className="secundario" onClick={() => editar(cliente)}>
-                    Editar
-                  </button>
-                  <button className="perigo" onClick={() => excluir(cliente.id)}>
-                    Excluir
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
     </section>
   );
 }

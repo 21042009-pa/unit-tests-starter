@@ -1,6 +1,6 @@
 # aula05-testes-starter
 
-Projeto base das aulas de Testes de Software: testes unitarios e de integracao com Jest e Supertest, e testes E2E com Playwright.
+Projeto base das aulas de Testes de Software: testes unitarios e de integracao com Jest e Supertest.
 
 ## Como comecar
 
@@ -23,7 +23,7 @@ web/                       - front-end React (Vite)
 
 ## Front-end e testes E2E
 
-O front-end em `web/` e uma tela simples de lanchonete (Produtos, Clientes e Pedidos) feita com Vite + React. Ele conversa com a API e e o sistema que vamos testar com o Playwright.
+O front-end em `web/` e uma tela simples de lanchonete (Produtos, Clientes e Pedidos) feita com Vite + React. Ele conversa com a API.
 
 ### Instalacao
 

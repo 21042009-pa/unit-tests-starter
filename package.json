@@ -1,7 +1,7 @@
 {
   "name": "aula05-testes-starter",
   "version": "1.0.0",
-  "description": "Projeto base das aulas de Testes de Software (Jest, Supertest e Playwright)",
+  "description": "Projeto base das aulas de Testes de Software (Jest e Supertest)",
   "scripts": {
     "test": "jest",
     "test:unit": "jest api/__tests__/unit",
