@@ -18,7 +18,15 @@ describe("PedidoService (unitario com mocks)", () => {
 
   describe("listar", () => {
     test("chama repository.findAll uma vez e retorna o resultado", () => {
-      const pedidos = [{ id: 1, cliente: "Ana Souza", itens: [], status: "pendente", total: 0 }];
+      const pedidos = [
+        {
+          id: 1,
+          cliente: "Ana Souza",
+          itens: [],
+          status: "pendente",
+          total: 0,
+        },
+      ];
       mockRepository.findAll.mockReturnValue(pedidos);
 
       const resultado = service.listar();
